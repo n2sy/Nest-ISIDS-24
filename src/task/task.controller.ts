@@ -1,30 +1,54 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  ParseIntPipe,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { AddTaskDTO } from './DTO/task.dto';
+import { TaskService } from './task.service';
 
 @Controller('task')
 export class TaskController {
-  tabTasks = [];
-
+  @Inject(TaskService) taskSer;
+  // constructor(private taskSer: TaskService) {}
   @Get('all')
   getAllTasks(@Res() response: Response) {
-    return response.json({ allTasks: this.tabTasks });
+    let tab = this.taskSer.getTasks();
+    return response.status(200).json({ allTasks: tab });
   }
 
   @Post('add')
   addTask(
     @Req() request: Request,
-    @Body('year') annee,
-    @Body('title') titre,
+    @Body() newT: AddTaskDTO,
     @Res() response: Response,
   ) {
-    let newId = uuidv4();
-    this.tabTasks.push({
-      id: newId,
-      year: annee,
-      title: titre,
-      createdAt: new Date(),
-    });
-    response.json({ message: 'Task added successfully', id: newId });
+    console.log(newT);
+
+    let id = this.taskSer.ajouterTask(newT['title'], newT['year']);
+    return response.json({ message: 'Task added successfully', id });
+  }
+
+  @Get(':id')
+  getTaskById(@Param('id') id, @Res() response: Response) {
+    let task = this.taskSer.chercherTask(id);
+    if (!task) {
+      return response
+        .status(404)
+        .json({ message: 'Y a aucn task avec cet ID' });
+    }
+    return response.json(task);
+  }
+
+  @Get('sort/:year')
+  searchByYear(@Param('year', ParseIntPipe) year, @Res() response: Response) {
+    let tab = this.taskSer.chercherTaskParAnnee(year);
+    return response.json({ selectedTasks: tab });
   }
 }
