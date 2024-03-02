@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { CandidatModule } from './candidat/candidat.module';
 import { TaskModule } from './task/task.module';
 import { TokenMiddleware } from './token/token.middleware';
+import { AuthModule } from './auth/auth.module';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ dotenv.config();
       autoLoadEntities: true,
     }),
     CandidatModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
