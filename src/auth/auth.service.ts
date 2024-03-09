@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -8,6 +9,7 @@ import { UserEntity } from './user.entity';
 export class AuthService {
   constructor(
     @InjectRepository(UserEntity) private userRepo: Repository<UserEntity>,
+    private jwtService: JwtService,
   ) {}
   async signup(credentials) {
     let newUser = this.userRepo.create({
@@ -35,9 +37,16 @@ export class AuthService {
     let result = await bcrypt.compare(password, selectedUser.password);
     if (!result) throw new NotFoundException('Wrong Password');
     else {
+      let token = this.jwtService.sign({
+        id: selectedUser.id,
+        username: selectedUser.username,
+        email: selectedUser.email,
+        role: selectedUser.role,
+      });
       return {
         id: selectedUser.id,
         role: selectedUser.role,
+        access_token: token,
       };
     }
   }
